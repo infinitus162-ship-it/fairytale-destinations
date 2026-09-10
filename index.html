@@ -1,0 +1,1572 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
+<title>Storybook Scenes — Location Library &amp; Destination Tracker</title>
+<meta name="theme-color" content="#8a4b1f">
+<meta name="description" content="A cozy offline companion for browsing storybook village locations and tracking Instagram post usage.">
+<link rel="manifest" href="./manifest.json">
+<link rel="icon" href="./icon-192.png">
+<link rel="apple-touch-icon" href="./icon-192.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Storybook Scenes">
+<style>
+  :root{
+    --ink: #3b2a1a;
+    --ink-soft: #5a4430;
+    --parchment: #f6ecd9;
+    --parchment-deep: #efe0c0;
+    --card: #fffaf0;
+    --card-edge: rgba(139,94,52,0.28);
+    --amber: #c9852b;
+    --amber-dark: #8a4b1f;
+    --amber-deepest: #6b3616;
+    --gold: #d4a017;
+    --shadow: 0 12px 28px rgba(90,60,20,0.18);
+    --shadow-soft: 0 6px 16px rgba(90,60,20,0.12);
+    --radius-lg: 22px;
+    --radius-md: 16px;
+    --radius-sm: 10px;
+    --serif: Georgia, "Times New Roman", Times, serif;
+    --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+
+  *{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body{
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+  }
+
+  body{
+    font-family: var(--sans);
+    color: var(--ink);
+    background:
+      radial-gradient(1200px 700px at 15% -10%, rgba(212,160,23,0.20), transparent 60%),
+      radial-gradient(900px 600px at 110% 10%, rgba(201,133,43,0.22), transparent 55%),
+      linear-gradient(160deg, var(--parchment-deep), var(--parchment) 55%, var(--parchment-deep));
+    background-attachment: fixed;
+    min-height: 100vh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  #app{
+    max-width: 720px;
+    margin: 0 auto;
+    padding: 1.25rem 1.1rem 3rem;
+    min-height: 100vh;
+  }
+
+  h1, h2, h3{
+    font-family: var(--serif);
+    color: var(--ink);
+    margin: 0 0 0.35rem;
+    letter-spacing: 0.01em;
+  }
+
+  p{ margin: 0.35rem 0; line-height: 1.5; color: var(--ink-soft); }
+
+  button{
+    font-family: var(--sans);
+    cursor: pointer;
+  }
+
+  /* ---------- Top bar ---------- */
+  .topbar{
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    margin-bottom: 1.1rem;
+  }
+
+  .icon-btn{
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--card-edge);
+    background: var(--card);
+    color: var(--amber-dark);
+    font-size: 1.15rem;
+    display: grid;
+    place-items: center;
+    box-shadow: var(--shadow-soft);
+  }
+  .icon-btn:active{ transform: scale(0.94); }
+
+  .topbar-title{
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--ink);
+    line-height: 1.15;
+  }
+  .topbar-sub{
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+    margin-top: 0.1rem;
+  }
+
+  /* ---------- Home screen ---------- */
+  .home-wrap{
+    min-height: calc(100vh - 2rem);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 2rem 0.5rem;
+  }
+  .home-emblem{
+    font-size: 3.2rem;
+    margin-bottom: 0.4rem;
+    filter: drop-shadow(0 6px 10px rgba(138,75,31,0.25));
+  }
+  .home-title{
+    font-size: clamp(1.9rem, 7vw, 2.6rem);
+    margin-bottom: 0.2rem;
+  }
+  .home-tagline{
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 2.2rem;
+    max-width: 32ch;
+  }
+  .home-nav{
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    width: 100%;
+    max-width: 380px;
+  }
+  .nav-card{
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.3rem 1.4rem;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: transform 0.12s ease;
+  }
+  .nav-card:active{ transform: scale(0.98); }
+  .nav-card-emoji{ font-size: 2.1rem; }
+  .nav-card-title{
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    color: var(--ink);
+  }
+  .nav-card-desc{
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-top: 0.15rem;
+  }
+
+  /* ---------- Cards / lists ---------- */
+  .card{
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    padding: 1rem 1.1rem;
+    margin-bottom: 0.8rem;
+  }
+
+  .list-btn{
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-soft);
+    padding: 0.95rem 1.1rem;
+    margin-bottom: 0.65rem;
+    text-align: left;
+    font-size: 1rem;
+    color: var(--ink);
+  }
+  .list-btn:active{ transform: scale(0.985); }
+  .list-btn-left{ display:flex; align-items:center; gap:0.7rem; }
+  .list-btn-flag{ font-size: 1.4rem; }
+  .list-btn-name{ font-family: var(--serif); font-size: 1.05rem; }
+  .list-btn-count{ font-size: 0.78rem; color: var(--ink-soft); }
+  .chev{ color: var(--amber-dark); opacity: 0.7; }
+
+  /* ---------- Tabs ---------- */
+  .tabs{
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.3rem;
+    margin-bottom: 1rem;
+    -webkit-overflow-scrolling: touch;
+  }
+  .tab{
+    flex-shrink: 0;
+    border: 1.5px solid var(--amber);
+    background: transparent;
+    color: var(--amber-dark);
+    padding: 0.5rem 0.95rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .tab.active{
+    background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+    color: #fff8ec;
+    border-color: transparent;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .dest-item{
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 0.95rem;
+    margin-bottom: 0.55rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-soft);
+  }
+  .dest-name{ font-family: var(--serif); font-size: 1rem; color: var(--ink); }
+  .dest-flags{ font-size: 1.05rem; white-space: nowrap; margin-left: 0.5rem; }
+  .empty-note{
+    text-align: center;
+    color: var(--ink-soft);
+    font-style: italic;
+    padding: 2rem 1rem;
+  }
+
+  /* ---------- Buttons ---------- */
+  .btn{
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 1.1rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    box-shadow: var(--shadow-soft);
+  }
+  .btn-primary{
+    background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+    color: #fff8ec;
+    width: 100%;
+  }
+  .btn-primary:active{ transform: scale(0.98); }
+  .btn-secondary{
+    background: transparent;
+    color: var(--amber-dark);
+    border: 1.5px solid var(--amber);
+  }
+  .btn-ghost{
+    background: transparent;
+    color: var(--ink-soft);
+    border: 1px solid var(--card-edge);
+    box-shadow: none;
+    font-weight: 500;
+  }
+  .btn-danger{
+    background: transparent;
+    color: #a23c2e;
+    border: 1px solid rgba(162,60,46,0.4);
+    box-shadow: none;
+  }
+  .btn-row{ display: flex; gap: 0.6rem; flex-wrap: wrap; }
+  .btn-block{ width: 100%; }
+  .btn-sm{ padding: 0.45rem 0.75rem; font-size: 0.8rem; }
+
+  /* ---------- Tracker subnav ---------- */
+  .subnav{
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.1rem;
+    flex-wrap: wrap;
+  }
+  .subnav button{
+    flex: 1 1 auto;
+    border: 1.5px solid var(--amber);
+    background: var(--card);
+    color: var(--amber-dark);
+    padding: 0.6rem 0.5rem;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+  .subnav button.active{
+    background: linear-gradient(135deg, var(--amber), var(--amber-dark));
+    color: #fff8ec;
+    border-color: transparent;
+  }
+
+  /* ---------- Search ---------- */
+  .search-input{
+    width: 100%;
+    padding: 0.85rem 1rem;
+    font-size: 1rem;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--card-edge);
+    background: var(--card);
+    color: var(--ink);
+    margin-bottom: 0.9rem;
+    font-family: var(--sans);
+  }
+  .search-input:focus{
+    outline: none;
+    border-color: var(--amber);
+  }
+  .result-item{
+    width: 100%;
+    text-align: left;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-sm);
+    padding: 0.7rem 0.9rem;
+    margin-bottom: 0.5rem;
+    box-shadow: var(--shadow-soft);
+  }
+  .result-item:active{ transform: scale(0.98); }
+  .result-name{ font-family: var(--serif); font-size: 1rem; }
+  .result-meta{ font-size: 0.78rem; color: var(--ink-soft); margin-top: 0.1rem; }
+
+  /* ---------- Detail card ---------- */
+  .detail-card{
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    padding: 1.3rem;
+    margin-bottom: 1rem;
+  }
+  .detail-title{ font-family: var(--serif); font-size: 1.4rem; margin-bottom: 0.1rem; }
+  .detail-meta{ font-size: 0.9rem; color: var(--ink-soft); margin-bottom: 0.9rem; }
+  .last-used-box{
+    background: var(--parchment-deep);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem 1rem;
+    text-align: center;
+    margin-bottom: 1rem;
+  }
+  .last-used-days{
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    color: var(--amber-deepest);
+  }
+  .last-used-label{
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+  }
+
+  .custom-date-box{
+    background: var(--parchment-deep);
+    border-radius: var(--radius-sm);
+    padding: 0.9rem;
+    margin-top: 0.7rem;
+  }
+  .field-row{
+    display: flex;
+    gap: 0.55rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  input[type="date"], input[type="text"], textarea, select{
+    font-family: var(--sans);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--card-edge);
+    background: #fffdf6;
+    color: var(--ink);
+    padding: 0.55rem 0.7rem;
+    font-size: 0.95rem;
+  }
+  input[type="date"]:focus, input[type="text"]:focus, textarea:focus, select:focus{
+    outline: none;
+    border-color: var(--amber);
+  }
+
+  .history-toggle{
+    background: none;
+    border: none;
+    color: var(--amber-dark);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.4rem 0;
+    text-decoration: underline;
+  }
+  .history-list{ margin-top: 0.6rem; }
+  .history-item{
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.55rem 0.7rem;
+    border-radius: var(--radius-sm);
+    background: var(--parchment-deep);
+    margin-bottom: 0.4rem;
+    flex-wrap: wrap;
+  }
+  .history-date{ font-weight: 600; font-size: 0.9rem; }
+  .history-actions{ display: flex; gap: 0.4rem; }
+  .icon-link{
+    background: none;
+    border: none;
+    font-size: 0.95rem;
+    padding: 0.2rem 0.4rem;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- Longest unused ---------- */
+  .longest-item{
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 0.95rem;
+    margin-bottom: 0.55rem;
+    box-shadow: var(--shadow-soft);
+    gap: 0.6rem;
+  }
+  .longest-name{ font-family: var(--serif); font-size: 1rem; }
+  .longest-meta{ font-size: 0.78rem; color: var(--ink-soft); }
+  .longest-days{
+    font-family: var(--serif);
+    color: var(--amber-deepest);
+    font-size: 1.1rem;
+    white-space: nowrap;
+  }
+
+  /* ---------- Bulk import ---------- */
+  .bulk-textarea{
+    width: 100%;
+    min-height: 220px;
+    resize: vertical;
+    margin-bottom: 0.8rem;
+    line-height: 1.4;
+  }
+  .review-row{
+    background: var(--card);
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem;
+    margin-bottom: 0.6rem;
+  }
+  .review-raw{
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    font-family: monospace;
+    margin-bottom: 0.4rem;
+    word-break: break-word;
+  }
+  .review-row select{ width: 100%; margin-top: 0.3rem; }
+  .review-row .field-row{ margin-top: 0.4rem; }
+  .review-warn{
+    color: #a23c2e;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 0.3rem;
+  }
+  .review-ok{
+    color: #4a7a3a;
+    font-size: 0.78rem;
+    font-weight: 600;
+    margin-top: 0.3rem;
+  }
+  .checkbox-row{
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+    margin-top: 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .banner{
+    background: linear-gradient(135deg, rgba(212,160,23,0.25), rgba(201,133,43,0.2));
+    border: 1px solid var(--card-edge);
+    border-radius: var(--radius-sm);
+    padding: 0.75rem 0.9rem;
+    margin-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.9rem;
+  }
+
+  .section-desc{
+    font-size: 0.85rem;
+    color: var(--ink-soft);
+    margin-bottom: 1rem;
+  }
+
+  ::selection{ background: rgba(212,160,23,0.4); }
+
+  @media (min-width: 600px){
+    .home-nav{ flex-direction: row; }
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     1. STATIC DESTINATION DATA
+     ========================================================= */
+  var RAW_DATA = "Germany|1|Rothenburg ob der Tauber|FC\n" +
+"Germany|1|Heidelberg|N\n" +
+"Germany|1|Bamberg|FC\n" +
+"Germany|1|Quedlinburg|FC\n" +
+"Germany|1|Monschau|FC\n" +
+"Germany|1|Füssen|FC\n" +
+"Germany|2|Cochem|N\n" +
+"Germany|2|Bernkastel-Kues|FC\n" +
+"Germany|2|Dinkelsbühl|FC\n" +
+"Germany|2|Wernigerode|FC\n" +
+"Germany|2|Bacharach|N\n" +
+"Germany|2|Mittenwald|F\n" +
+"Germany|2|Garmisch-Partenkirchen|F\n" +
+"Germany|2|Meersburg|N\n" +
+"Germany|2|Gengenbach|FC\n" +
+"Germany|2|Oberammergau|F\n" +
+"Germany|3|Schiltach|N\n" +
+"Germany|3|Beilstein|N\n" +
+"Germany|3|Miltenberg|N\n" +
+"Germany|3|Schwäbisch Hall|N\n" +
+"Germany|3|Bad Wimpfen|N\n" +
+"Germany|3|Stolberg|C\n" +
+"Germany|3|Seßlach|N\n" +
+"Germany|3|Ramsau bei Berchtesgaden|P\n" +
+"France|1|Colmar|FC\n" +
+"France|1|Strasbourg|FC\n" +
+"France|1|Eguisheim|FC\n" +
+"France|1|Riquewihr|FC\n" +
+"France|1|Annecy|FC\n" +
+"France|1|Mont-Saint-Michel|N\n" +
+"France|1|Gordes|N\n" +
+"France|2|Kaysersberg|FC\n" +
+"France|2|Ribeauvillé|FC\n" +
+"France|2|Dinan|N\n" +
+"France|2|Honfleur|N\n" +
+"France|2|Bayeux|N\n" +
+"France|2|Yvoire|N\n" +
+"France|2|Saint-Cirq-Lapopie|N\n" +
+"France|2|Rocamadour|N\n" +
+"France|2|Megève|F\n" +
+"France|2|Chamonix|F\n" +
+"France|3|Locronan|N\n" +
+"France|3|Rochefort-en-Terre|FC\n" +
+"France|3|Lyons-la-Forêt|N\n" +
+"France|3|Beuvron-en-Auge|N\n" +
+"France|3|Gerberoy|N\n" +
+"France|3|Veules-les-Roses|N\n" +
+"France|3|Mittelbergheim|N\n" +
+"France|3|Bergheim|FC\n" +
+"France|3|Bonneval-sur-Arc|P\n" +
+"France|3|Saint-Véran|P\n" +
+"Austria|1|Hallstatt|FC\n" +
+"Austria|1|Salzburg|FC\n" +
+"Austria|1|Innsbruck|FC\n" +
+"Austria|2|Alpbach|F\n" +
+"Austria|2|St. Wolfgang im Salzkammergut|FC\n" +
+"Austria|2|St. Gilgen|FC\n" +
+"Austria|2|Zell am See|FC\n" +
+"Austria|2|Kitzbühel|F\n" +
+"Austria|2|Seefeld in Tirol|F\n" +
+"Austria|2|Dürnstein|N\n" +
+"Austria|3|Heiligenblut am Großglockner|P\n" +
+"Austria|3|Maria Alm|F\n" +
+"Austria|3|Filzmoos|F\n" +
+"Austria|3|Gosau|P\n" +
+"Austria|3|Rattenberg|FC\n" +
+"Austria|3|Werfen|N\n" +
+"Austria|3|Maria Wörth|N\n" +
+"Austria|3|Rust|N\n" +
+"Switzerland|1|Lauterbrunnen|C\n" +
+"Switzerland|1|Grindelwald|F\n" +
+"Switzerland|1|Zermatt|F\n" +
+"Switzerland|1|Wengen|F\n" +
+"Switzerland|1|Lucerne|FC\n" +
+"Switzerland|1|Bern|FC\n" +
+"Switzerland|2|Mürren|P\n" +
+"Switzerland|2|Appenzell|FC\n" +
+"Switzerland|2|Stein am Rhein|FC\n" +
+"Switzerland|2|Gruyères|FC\n" +
+"Switzerland|2|Kandersteg|P\n" +
+"Switzerland|2|Brienz|N\n" +
+"Switzerland|2|Soglio|N\n" +
+"Switzerland|2|Guarda|P\n" +
+"Switzerland|2|Morcote|N\n" +
+"Switzerland|3|Bergün|P\n" +
+"Switzerland|3|Zuoz|P\n" +
+"Switzerland|3|Grimentz|F\n" +
+"Switzerland|3|Saint-Ursanne|N\n" +
+"Switzerland|3|Ernen|P\n" +
+"Switzerland|3|Binn|P\n" +
+"Switzerland|3|Andermatt|F\n" +
+"Switzerland|3|Foroglio|N\n" +
+"United Kingdom|1|Bibury|C\n" +
+"United Kingdom|1|Castle Combe|C\n" +
+"United Kingdom|1|Bourton-on-the-Water|FC\n" +
+"United Kingdom|1|Bath|FC\n" +
+"United Kingdom|1|York|FC\n" +
+"United Kingdom|1|Edinburgh|FC\n" +
+"United Kingdom|2|Stow-on-the-Wold|FC\n" +
+"United Kingdom|2|Broadway|FC\n" +
+"United Kingdom|2|Chipping Campden|FC\n" +
+"United Kingdom|2|Rye|N\n" +
+"United Kingdom|2|Lavenham|N\n" +
+"United Kingdom|2|Haworth|FC\n" +
+"United Kingdom|2|Whitby|N\n" +
+"United Kingdom|2|Keswick|FC\n" +
+"United Kingdom|2|Ambleside|FC\n" +
+"United Kingdom|2|Beddgelert|N\n" +
+"United Kingdom|2|Betws-y-Coed|FC\n" +
+"United Kingdom|2|Tobermory|N\n" +
+"United Kingdom|2|Portree|N\n" +
+"United Kingdom|3|Stanton|N\n" +
+"United Kingdom|3|Snowshill|N\n" +
+"United Kingdom|3|Lower Slaughter|N\n" +
+"United Kingdom|3|Painswick|N\n" +
+"United Kingdom|3|Lacock|N\n" +
+"United Kingdom|3|Clovelly|N\n" +
+"United Kingdom|3|Staithes|N\n" +
+"United Kingdom|3|Hawkshead|C\n" +
+"United Kingdom|3|Bradford-on-Avon|N\n" +
+"United Kingdom|3|Culross|N\n" +
+"United Kingdom|3|Dunkeld|FC\n" +
+"United Kingdom|3|Plockton|N\n" +
+"United Kingdom|3|Braemar|C\n" +
+"United Kingdom|3|Cushendun|N\n" +
+"United Kingdom|3|Royal Hillsborough|N\n" +
+"Belgium|1|Bruges|FC\n" +
+"Belgium|1|Ghent|FC\n" +
+"Belgium|2|Dinant|N\n" +
+"Belgium|2|Durbuy|FC\n" +
+"Belgium|2|Damme|N\n" +
+"Belgium|2|Bouillon|C\n" +
+"Belgium|2|Leuven|FC\n" +
+"Belgium|3|Torgny|N\n" +
+"Belgium|3|Celles|N\n" +
+"Belgium|3|Crupet|N\n" +
+"Belgium|3|Veurne|N\n" +
+"Belgium|3|Oud-Rekem|N\n" +
+"Netherlands|1|Amsterdam|FC\n" +
+"Netherlands|1|Giethoorn|C\n" +
+"Netherlands|1|Zaanse Schans|N\n" +
+"Netherlands|1|Delft|FC\n" +
+"Netherlands|2|Marken|C\n" +
+"Netherlands|2|Edam|N\n" +
+"Netherlands|2|Broek in Waterland|C\n" +
+"Netherlands|2|Haarlem|FC\n" +
+"Netherlands|2|Enkhuizen|N\n" +
+"Netherlands|2|Zierikzee|N\n" +
+"Netherlands|2|Deventer|FC\n" +
+"Netherlands|3|Bourtange|FC\n" +
+"Netherlands|3|Thorn|N\n" +
+"Netherlands|3|Veere|N\n" +
+"Netherlands|3|Hindeloopen|N\n" +
+"Netherlands|3|Ootmarsum|N\n" +
+"Netherlands|3|Dokkum|N\n" +
+"Netherlands|3|Oudewater|N\n" +
+"Ireland|1|Dingle|N\n" +
+"Ireland|1|Kinsale|FC\n" +
+"Ireland|1|Cobh|N\n" +
+"Ireland|1|Adare|FC\n" +
+"Ireland|2|Kenmare|N\n" +
+"Ireland|2|Westport|FC\n" +
+"Ireland|2|Cong|N\n" +
+"Ireland|2|Carlingford|N\n" +
+"Ireland|2|Doolin|N\n" +
+"Ireland|3|Inistioge|N\n" +
+"Ireland|3|Eyeries|N\n" +
+"Ireland|3|Roundstone|N\n" +
+"Ireland|3|Ardmore|N\n" +
+"Ireland|3|Dunmore East|N\n" +
+"Ireland|3|Enniskerry|FC\n" +
+"Norway|1|Bergen|FC\n" +
+"Norway|1|Reine|C\n" +
+"Norway|1|Hamnøy|C\n" +
+"Norway|1|Henningsvær|FC\n" +
+"Norway|1|Ålesund|N\n" +
+"Norway|2|Nusfjord|C\n" +
+"Norway|2|Å|C\n" +
+"Norway|2|Røros|F\n" +
+"Norway|2|Undredal|C\n" +
+"Norway|2|Balestrand|N\n" +
+"Norway|2|Lærdalsøyri|C\n" +
+"Norway|2|Stavanger|N\n" +
+"Norway|3|Sogndalstrand|N\n" +
+"Norway|3|Skudeneshavn|N\n" +
+"Norway|3|Fjærland|N\n" +
+"Norway|3|Kalvåg|N\n" +
+"Norway|3|Sør-Gjæslingan|N\n" +
+"Sweden|1|Stockholm|FC\n" +
+"Sweden|1|Visby|FC\n" +
+"Sweden|1|Smögen|N\n" +
+"Sweden|2|Sigtuna|FC\n" +
+"Sweden|2|Mariefred|FC\n" +
+"Sweden|2|Fjällbacka|N\n" +
+"Sweden|2|Ystad|N\n" +
+"Sweden|2|Trosa|FC\n" +
+"Sweden|2|Gränna|FC\n" +
+"Sweden|2|Vadstena|N\n" +
+"Sweden|2|Tällberg|F\n" +
+"Sweden|3|Eksjö|FC\n" +
+"Sweden|3|Nora|FC\n" +
+"Sweden|3|Hjo|N\n" +
+"Sweden|3|Öregrund|N\n" +
+"Sweden|3|Sundborn|P\n" +
+"Sweden|3|Mölle|N\n" +
+"Sweden|3|Gammelstad Church Town|F\n" +
+"Finland|1|Porvoo|FC\n" +
+"Finland|1|Old Rauma|FC\n" +
+"Finland|2|Naantali|FC\n" +
+"Finland|2|Fiskars|FC\n" +
+"Finland|2|Levi|F\n" +
+"Finland|2|Saariselkä|F\n" +
+"Finland|2|Äkäslompolo|F\n" +
+"Finland|3|Mathildedal|FC\n" +
+"Finland|3|Tammisaari/Ekenäs|FC\n" +
+"Finland|3|Kristinestad/Kristiinankaupunki|N\n" +
+"Finland|3|Kokkola|P\n" +
+"Finland|3|Puu-Nurmes|P\n" +
+"Finland|3|Old Raahe|P\n" +
+"Finland|3|Ylläsjärvi|P\n" +
+"Iceland|1|Reykjavík|FC\n" +
+"Iceland|1|Vík|C\n" +
+"Iceland|1|Seyðisfjörður|P\n" +
+"Iceland|2|Stykkishólmur|C\n" +
+"Iceland|2|Siglufjörður|P\n" +
+"Iceland|2|Húsavík|C\n" +
+"Iceland|2|Akureyri|F\n" +
+"Iceland|3|Flateyri|P\n" +
+"Iceland|3|Eskifjörður|P\n" +
+"Iceland|3|Hof in Öræfi|C\n" +
+"Denmark|1|Copenhagen|FC\n" +
+"Denmark|1|Ærøskøbing|FC\n" +
+"Denmark|1|Ribe|FC\n" +
+"Denmark|2|Ebeltoft|FC\n" +
+"Denmark|2|Dragør|FC\n" +
+"Denmark|2|Skagen|N\n" +
+"Denmark|2|Svaneke|N\n" +
+"Denmark|2|Gudhjem|N\n" +
+"Denmark|3|Faaborg|N\n" +
+"Denmark|3|Møgeltønder|C\n" +
+"Denmark|3|Mariager|N\n" +
+"Denmark|3|Rudkøbing|N\n" +
+"Denmark|3|Sønderho|C\n" +
+"Denmark|3|Nordby|N\n" +
+"Greenland|1|Ilulissat|P\n" +
+"Greenland|1|Nuuk|C\n" +
+"Greenland|2|Sisimiut|P\n" +
+"Greenland|2|Qaqortoq|C\n" +
+"Greenland|2|Tasiilaq|P\n" +
+"Greenland|3|Qeqertarsuaq|P\n" +
+"Greenland|3|Uummannaq|P\n" +
+"Greenland|3|Oqaatsut|P\n" +
+"Greenland|3|Ilimanaq|P\n" +
+"United States|1|Woodstock, Vermont|F\n" +
+"United States|1|Stowe, Vermont|F\n" +
+"United States|1|Nantucket Town, Massachusetts|FC\n" +
+"United States|1|Carmel-by-the-Sea, California|N\n" +
+"United States|1|Leavenworth, Washington|F\n" +
+"United States|2|Kennebunkport, Maine|FC\n" +
+"United States|2|Camden, Maine|FC\n" +
+"United States|2|Stockbridge, Massachusetts|FC\n" +
+"United States|2|Edgartown, Massachusetts|N\n" +
+"United States|2|Newport, Rhode Island|FC\n" +
+"United States|2|Portsmouth, New Hampshire|FC\n" +
+"United States|2|Jackson, New Hampshire|F\n" +
+"United States|2|Lake Placid, New York|F\n" +
+"United States|2|Telluride, Colorado|F\n" +
+"United States|2|Breckenridge, Colorado|F\n" +
+"United States|2|Mackinac Island, Michigan|P\n" +
+"United States|3|Grafton, Vermont|F\n" +
+"United States|3|Weston, Vermont|F\n" +
+"United States|3|Peacham, Vermont|P\n" +
+"United States|3|Chester, Vermont|F\n" +
+"United States|3|Wiscasset, Maine|N\n" +
+"United States|3|Essex, Connecticut|FC\n" +
+"United States|3|Litchfield, Connecticut|FC\n" +
+"United States|3|Siasconset, Massachusetts|N\n" +
+"United States|3|Sugar Hill, New Hampshire|P\n" +
+"Italy|1|Ortisei / St. Ulrich|F\n" +
+"Italy|1|Bellagio|N\n" +
+"Italy|1|Manarola|N\n" +
+"Italy|2|Santa Maddalena / St. Magdalena|P\n" +
+"Italy|2|Castelrotto / Kastelruth|F\n" +
+"Italy|2|Varenna|N\n" +
+"Italy|2|Malcesine|N\n" +
+"Italy|2|San Candido / Innichen|F\n" +
+"Italy|3|Canale di Tenno|N\n" +
+"Italy|3|Chiusa / Klausen|FC\n" +
+"Italy|3|Vipiteno / Sterzing|F\n" +
+"Spain|1|Albarracín|C\n" +
+"Spain|1|Valldemossa|N\n" +
+"Spain|1|Ronda|N\n" +
+"Spain|2|Cadaqués|N\n" +
+"Spain|2|Santillana del Mar|N\n" +
+"Spain|2|Besalú|N\n" +
+"Spain|3|Cudillero|N\n" +
+"Spain|3|Bárcena Mayor|N\n" +
+"Spain|3|Arties|C\n" +
+"Spain|3|Bagergue|P\n" +
+"Estonia|1|Tallinn|F\n" +
+"Estonia|2|Haapsalu|C\n" +
+"Estonia|2|Kuressaare|C\n" +
+"Estonia|3|Viljandi|P\n" +
+"Estonia|3|Käsmu|C";
+
+  function parseData(raw){
+    return raw.split("\n").filter(function(l){ return l.trim().length > 0; }).map(function(line, idx){
+      var parts = line.split("|");
+      var country = parts[0];
+      var tier = parseInt(parts[1], 10);
+      var name = parts[2];
+      var code = (parts[3] || "").trim();
+      var winter = false, festive = false, conditional = false;
+      if(code === "P"){ winter = true; }
+      else if(code === "F"){ winter = true; festive = true; }
+      else if(code === "C"){ winter = true; conditional = true; }
+      else if(code === "FC"){ winter = true; festive = true; conditional = true; }
+      return { id: "d" + idx, country: country, tier: tier, name: name, winter: winter, festive: festive, conditional: conditional };
+    });
+  }
+
+  var DESTINATIONS = parseData(RAW_DATA);
+
+  var COUNTRIES = (function(){
+    var seen = {};
+    var out = [];
+    DESTINATIONS.forEach(function(d){
+      if(!seen[d.country]){ seen[d.country] = true; out.push(d.country); }
+    });
+    return out;
+  })();
+
+  var FLAGS = {
+    "Germany": "🇩🇪", "France": "🇫🇷", "Austria": "🇦🇹", "Switzerland": "🇨🇭",
+    "United Kingdom": "🇬🇧", "Belgium": "🇧🇪", "Netherlands": "🇳🇱", "Ireland": "🇮🇪",
+    "Norway": "🇳🇴", "Sweden": "🇸🇪", "Finland": "🇫🇮", "Iceland": "🇮🇸",
+    "Denmark": "🇩🇰", "Greenland": "🇬🇱", "United States": "🇺🇸", "Italy": "🇮🇹",
+    "Spain": "🇪🇸", "Estonia": "🇪🇪"
+  };
+  function flagFor(country){ return FLAGS[country] || "🏰"; }
+
+  var COUNTRY_GROUPS = COUNTRIES.map(function(c){
+    return { country: c, items: DESTINATIONS.filter(function(d){ return d.country === c; }) };
+  });
+
+  var DEST_BY_ID = {};
+  DESTINATIONS.forEach(function(d){ DEST_BY_ID[d.id] = d; });
+
+  /* =========================================================
+     2. LOCAL STORAGE — usage log
+     ========================================================= */
+  var STORAGE_KEY = "storybookScenesUsageLog";
+
+  function loadLog(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return [];
+      var parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    }catch(e){ return []; }
+  }
+
+  function saveLog(entries){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(entries)); }catch(e){}
+  }
+
+  var logEntries = loadLog();
+
+  function makeId(){
+    if(window.crypto && window.crypto.randomUUID){ return window.crypto.randomUUID(); }
+    return "e" + Date.now() + Math.random().toString(16).slice(2);
+  }
+
+  function addLogEntry(destId, dateStr){
+    logEntries.push({ id: makeId(), destId: destId, date: dateStr });
+    saveLog(logEntries);
+  }
+
+  function updateLogEntry(entryId, newDate){
+    var e = logEntries.find(function(x){ return x.id === entryId; });
+    if(e){ e.date = newDate; saveLog(logEntries); }
+  }
+
+  function deleteLogEntry(entryId){
+    logEntries = logEntries.filter(function(x){ return x.id !== entryId; });
+    saveLog(logEntries);
+  }
+
+  function entriesFor(destId){
+    return logEntries.filter(function(x){ return x.destId === destId; })
+      .slice()
+      .sort(function(a,b){ return a.date < b.date ? 1 : (a.date > b.date ? -1 : 0); });
+  }
+
+  function lastUsedEntry(destId){
+    var list = entriesFor(destId);
+    return list.length ? list[0] : null;
+  }
+
+  /* =========================================================
+     3. DATE HELPERS
+     ========================================================= */
+  function todayStr(){
+    var d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth()+1).padStart(2,"0") + "-" + String(d.getDate()).padStart(2,"0");
+  }
+
+  function daysSince(dateStr){
+    var bits = dateStr.split("-").map(Number);
+    var used = new Date(bits[0], bits[1]-1, bits[2]);
+    var now = new Date();
+    var today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    return Math.round((today - used) / 86400000);
+  }
+
+  function formatDate(dateStr){
+    var bits = dateStr.split("-").map(Number);
+    var d = new Date(bits[0], bits[1]-1, bits[2]);
+    return d.toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  }
+
+  function daysLabel(days){
+    if(days === 0) return "Last used: today";
+    if(days === 1) return "Last used: yesterday";
+    if(days < 0) return "Last used: in the future?";
+    return "Last used: " + days + " days ago";
+  }
+
+  /* =========================================================
+     4. FUZZY SEARCH HELPERS
+     ========================================================= */
+  function normalize(s){
+    return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  }
+
+  function isSubsequence(q, t){
+    var i = 0;
+    for(var j = 0; j < t.length && i < q.length; j++){
+      if(t[j] === q[i]) i++;
+    }
+    return i === q.length;
+  }
+
+  function levenshtein(a, b){
+    var al = a.length, bl = b.length;
+    if(al === 0) return bl;
+    if(bl === 0) return al;
+    var dp = [];
+    for(var i = 0; i <= al; i++){ dp.push(new Array(bl+1).fill(0)); dp[i][0] = i; }
+    for(var j = 0; j <= bl; j++){ dp[0][j] = j; }
+    for(i = 1; i <= al; i++){
+      for(j = 1; j <= bl; j++){
+        var cost = a[i-1] === b[j-1] ? 0 : 1;
+        dp[i][j] = Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+      }
+    }
+    return dp[al][bl];
+  }
+
+  function searchDestinations(query){
+    var q = normalize(query);
+    if(!q) return [];
+    var scored = [];
+    DESTINATIONS.forEach(function(d){
+      var n = normalize(d.name);
+      var full = normalize(d.name + " " + d.country);
+      var score = null;
+      var idx = n.indexOf(q);
+      if(idx !== -1){
+        score = idx;
+      } else if(full.indexOf(q) !== -1){
+        score = 40;
+      } else if(isSubsequence(q, n)){
+        score = 60 + Math.abs(n.length - q.length);
+      } else {
+        var dist = levenshtein(q, n);
+        var threshold = Math.max(2, Math.ceil(q.length * 0.4));
+        if(dist <= threshold){ score = 100 + dist; }
+      }
+      if(score !== null){ scored.push({ d: d, score: score }); }
+    });
+    scored.sort(function(a,b){
+      if(a.score !== b.score) return a.score - b.score;
+      return a.d.name.localeCompare(b.d.name);
+    });
+    return scored.map(function(s){ return s.d; });
+  }
+
+  function bestMatchForName(name){
+    var results = searchDestinations(name);
+    return results.length ? results[0] : null;
+  }
+
+  /* =========================================================
+     5. TEXT ESCAPING
+     ========================================================= */
+  function escapeHtml(str){
+    return String(str == null ? "" : str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  /* =========================================================
+     6. APP STATE
+     ========================================================= */
+  var state = {
+    screen: "home",
+    libraryCountry: null,
+    libraryTab: "tier1",
+    trackerView: "search",
+    searchQuery: "",
+    selectedDestId: null,
+    historyExpanded: false,
+    editingEntryId: null,
+    showCustomDatePicker: false,
+    bulkRaw: "",
+    bulkReviewRows: null,
+    bulkSuccessMessage: ""
+  };
+
+  function setState(patch){
+    Object.assign(state, patch);
+    render();
+  }
+
+  /* =========================================================
+     7. RENDER FUNCTIONS
+     ========================================================= */
+  var app = document.getElementById("app");
+
+  function topbar(title, subtitle, backAction){
+    var back = backAction
+      ? '<button class="icon-btn" data-action="' + backAction + '" aria-label="Back">←</button>'
+      : '<span style="width:42px;"></span>';
+    return '<div class="topbar">' + back +
+      '<div><div class="topbar-title">' + title + '</div>' +
+      (subtitle ? '<div class="topbar-sub">' + subtitle + '</div>' : '') +
+      '</div></div>';
+  }
+
+  function renderHome(){
+    return '' +
+      '<div class="home-wrap">' +
+        '<div class="home-emblem">📖✨</div>' +
+        '<h1 class="home-title">Storybook Scenes</h1>' +
+        '<p class="home-tagline">A cozy keeper of villages, tiers &amp; winter tales for your storybook Instagram.</p>' +
+        '<div class="home-nav">' +
+          '<button class="nav-card" data-action="goto-library">' +
+            '<span class="nav-card-emoji">📚</span>' +
+            '<span><div class="nav-card-title">Location Library</div>' +
+            '<div class="nav-card-desc">Browse countries, tiers &amp; winter wonderland picks.</div></span>' +
+          '</button>' +
+          '<button class="nav-card" data-action="goto-tracker">' +
+            '<span class="nav-card-emoji">🧭</span>' +
+            '<span><div class="nav-card-title">Destination Tracker</div>' +
+            '<div class="nav-card-desc">Search, log &amp; review when you last posted a place.</div></span>' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function renderLibraryCountries(){
+    var html = topbar("📚 Location Library", "Choose a country to explore", "goto-home");
+    COUNTRY_GROUPS.forEach(function(g){
+      html += '<button class="list-btn" data-action="open-country" data-country="' + escapeHtml(g.country) + '">' +
+        '<span class="list-btn-left"><span class="list-btn-flag">' + flagFor(g.country) + '</span>' +
+        '<span><div class="list-btn-name">' + escapeHtml(g.country) + '</div>' +
+        '<div class="list-btn-count">' + g.items.length + ' destinations</div></span></span>' +
+        '<span class="chev">›</span></button>';
+    });
+    return html;
+  }
+
+  function renderLibraryCountry(){
+    var country = state.libraryCountry;
+    var group = COUNTRY_GROUPS.find(function(g){ return g.country === country; });
+    if(!group){ return renderLibraryCountries(); }
+
+    var html = topbar(flagFor(country) + " " + escapeHtml(country), "Location Library", "back-to-countries");
+
+    html += '<div class="tabs">' +
+      ["tier1","tier2","tier3","winter"].map(function(tab){
+        var label = tab === "winter" ? "❄️ Winter Wonderland" : "Tier " + tab.slice(-1);
+        var active = state.libraryTab === tab ? " active" : "";
+        return '<button class="tab' + active + '" data-action="set-tab" data-tab="' + tab + '">' + label + '</button>';
+      }).join("") +
+    '</div>';
+
+    var filtered;
+    if(state.libraryTab === "winter"){
+      filtered = group.items.filter(function(d){ return d.winter; });
+    } else {
+      var tierNum = parseInt(state.libraryTab.slice(-1), 10);
+      filtered = group.items.filter(function(d){ return d.tier === tierNum; });
+    }
+
+    if(filtered.length === 0){
+      html += '<div class="empty-note">No destinations here yet. ✨</div>';
+    } else {
+      filtered.forEach(function(d){
+        var flags = "";
+        if(state.libraryTab === "winter"){
+          if(d.festive) flags += "🎄";
+          if(d.conditional) flags += " †";
+        }
+        html += '<div class="dest-item"><span class="dest-name">' + escapeHtml(d.name) +
+          (state.libraryTab !== "winter" ? '' : '') +
+          '</span>' + (flags ? '<span class="dest-flags">' + flags + '</span>' : '') + '</div>';
+      });
+    }
+    return html;
+  }
+
+  function trackerSubnav(){
+    var tabs = [
+      { key: "search", label: "🔍 Search" },
+      { key: "longest", label: "📊 Longest Unused" },
+      { key: "bulk", label: "📥 Bulk Import" }
+    ];
+    return '<div class="subnav">' + tabs.map(function(t){
+      var active = state.trackerView === t.key ? " active" : "";
+      return '<button class="' + active.trim() + '" data-action="tracker-tab" data-view="' + t.key + '">' + t.label + '</button>';
+    }).join("") + '</div>';
+  }
+
+  function renderDetailCard(dest){
+    var last = lastUsedEntry(dest.id);
+    var history = entriesFor(dest.id);
+    var badge = "";
+    if(dest.winter){
+      badge = " ❄️" + (dest.festive ? "🎄" : "") + (dest.conditional ? " †" : "");
+    }
+
+    var html = '<div class="detail-card">' +
+      '<div class="detail-title">' + escapeHtml(dest.name) + badge + '</div>' +
+      '<div class="detail-meta">' + escapeHtml(dest.country) + ' • Tier ' + dest.tier + '</div>' +
+      '<div class="last-used-box">' +
+        '<div class="last-used-label">' + (last ? "" : "Status") + '</div>' +
+        '<div class="last-used-days">' + (last ? daysLabel(daysSince(last.date)) : "Never used") + '</div>' +
+      '</div>' +
+      '<div class="btn-row">' +
+        '<button class="btn btn-primary" data-action="log-today" data-id="' + dest.id + '">✓ Log as used today</button>' +
+      '</div>' +
+      '<div style="margin-top:0.6rem;">' +
+        '<button class="btn btn-secondary btn-sm" data-action="toggle-custom-date">📅 Log with a custom date</button>' +
+      '</div>';
+
+    if(state.showCustomDatePicker){
+      html += '<div class="custom-date-box">' +
+        '<div class="field-row">' +
+          '<input type="date" id="custom-date-input" value="' + todayStr() + '">' +
+          '<button class="btn btn-primary btn-sm" data-action="log-custom" data-id="' + dest.id + '">Save</button>' +
+          '<button class="btn btn-ghost btn-sm" data-action="toggle-custom-date">Cancel</button>' +
+        '</div>' +
+      '</div>';
+    }
+
+    html += '<div style="margin-top:0.9rem;">' +
+      '<button class="history-toggle" data-action="toggle-history">' +
+        (state.historyExpanded ? "▲ Hide" : "▼ View") + " history (" + history.length + ")" +
+      '</button>';
+
+    if(state.historyExpanded){
+      html += '<div class="history-list">';
+      if(history.length === 0){
+        html += '<div class="empty-note" style="padding:0.8rem;">No logged dates yet.</div>';
+      } else {
+        history.forEach(function(entry){
+          if(state.editingEntryId === entry.id){
+            html += '<div class="history-item">' +
+              '<div class="field-row">' +
+                '<input type="date" id="edit-date-input-' + entry.id + '" value="' + entry.date + '">' +
+                '<button class="btn btn-primary btn-sm" data-action="save-edit-entry" data-entry-id="' + entry.id + '">Save</button>' +
+                '<button class="btn btn-ghost btn-sm" data-action="cancel-edit-entry">Cancel</button>' +
+              '</div>' +
+            '</div>';
+          } else {
+            html += '<div class="history-item">' +
+              '<span class="history-date">' + formatDate(entry.date) + '</span>' +
+              '<span class="history-actions">' +
+                '<button class="icon-link" data-action="edit-entry" data-entry-id="' + entry.id + '" title="Edit">✏️</button>' +
+                '<button class="icon-link" data-action="delete-entry" data-entry-id="' + entry.id + '" title="Delete">🗑️</button>' +
+              '</span>' +
+            '</div>';
+          }
+        });
+      }
+      html += '</div>';
+    }
+
+    html += '</div>';
+    html += '<div style="margin-top:1rem;"><button class="btn btn-ghost btn-block" data-action="clear-selection">✕ Clear selection / new search</button></div>';
+    html += '</div>';
+    return html;
+  }
+
+  function renderTrackerSearch(){
+    var html = "";
+    if(state.bulkSuccessMessage){
+      html += '<div class="banner"><span>🎉 ' + escapeHtml(state.bulkSuccessMessage) + '</span>' +
+        '<button class="btn btn-ghost btn-sm" data-action="dismiss-banner">✕</button></div>';
+    }
+
+    var selectedDest = state.selectedDestId ? DEST_BY_ID[state.selectedDestId] : null;
+
+    if(selectedDest){
+      html += renderDetailCard(selectedDest);
+      return html;
+    }
+
+    html += '<input type="text" id="search-input" class="search-input" placeholder="Type a destination name… e.g. dinkel" value="' + escapeHtml(state.searchQuery) + '" autocomplete="off">';
+
+    var query = state.searchQuery.trim();
+    if(query){
+      var results = searchDestinations(query).slice(0, 40);
+      if(results.length === 0){
+        html += '<div class="empty-note">No matches. Try a different spelling.</div>';
+      } else {
+        results.forEach(function(d){
+          html += '<button class="result-item" data-action="select-dest" data-id="' + d.id + '">' +
+            '<div class="result-name">' + escapeHtml(d.name) + '</div>' +
+            '<div class="result-meta">' + escapeHtml(d.country) + ', Tier ' + d.tier + '</div>' +
+          '</button>';
+        });
+      }
+    } else {
+      html += '<div class="empty-note">Start typing to find a destination.</div>';
+    }
+    return html;
+  }
+
+  function renderTrackerLongest(){
+    var withLogs = DESTINATIONS.map(function(d){
+      var last = lastUsedEntry(d.id);
+      return last ? { dest: d, days: daysSince(last.date), date: last.date } : null;
+    }).filter(Boolean);
+
+    withLogs.sort(function(a,b){ return b.days - a.days; });
+
+    var html = '<p class="section-desc">Destinations sorted from longest since last used to most recently used.</p>';
+    if(withLogs.length === 0){
+      html += '<div class="empty-note">No logged destinations yet. Head to Search to log your first one!</div>';
+    } else {
+      withLogs.forEach(function(item){
+        html += '<button class="longest-item" data-action="select-dest" data-id="' + item.dest.id + '" style="width:100%;text-align:left;border:1px solid var(--card-edge);">' +
+          '<span><div class="longest-name">' + escapeHtml(item.dest.name) + '</div>' +
+          '<div class="longest-meta">' + escapeHtml(item.dest.country) + ', Tier ' + item.dest.tier + '</div></span>' +
+          '<span class="longest-days">' + item.days + 'd</span>' +
+        '</button>';
+      });
+    }
+    return html;
+  }
+
+  function buildDestinationSelect(rowIndex, selectedId){
+    var html = '<select data-action="bulk-row-select" data-index="' + rowIndex + '">';
+    html += '<option value="">— No confident match, choose one —</option>';
+    COUNTRY_GROUPS.forEach(function(g){
+      html += '<optgroup label="' + escapeHtml(g.country) + '">';
+      g.items.forEach(function(d){
+        var sel = d.id === selectedId ? " selected" : "";
+        html += '<option value="' + d.id + '"' + sel + '>' + escapeHtml(d.name) + ' (Tier ' + d.tier + ')</option>';
+      });
+      html += '</optgroup>';
+    });
+    html += '</select>';
+    return html;
+  }
+
+  function renderTrackerBulk(){
+    var html = "";
+    if(state.bulkReviewRows === null){
+      html += '<p class="section-desc">Paste one entry per line as <code>DestinationName, YYYY-MM-DD</code>. We\'ll fuzzy-match each name so you can review before saving.</p>';
+      html += '<textarea id="bulk-textarea" class="bulk-textarea" placeholder="Dinkelsbuhl, 2024-03-12\nHallstatt, 2024-01-05\nBruges, 2023-12-20">' + escapeHtml(state.bulkRaw) + '</textarea>';
+      html += '<button class="btn btn-primary btn-block" data-action="bulk-parse">🔍 Parse Entries</button>';
+    } else {
+      var rows = state.bulkReviewRows;
+      html += '<p class="section-desc">Review each parsed line below. Fix the match or date if needed, then confirm to save.</p>';
+      rows.forEach(function(row, i){
+        html += '<div class="review-row">';
+        html += '<div class="review-raw">' + escapeHtml(row.raw) + '</div>';
+        html += buildDestinationSelect(i, row.destId);
+        html += '<div class="field-row">' +
+          '<label style="font-size:0.8rem;color:var(--ink-soft);">Date:</label>' +
+          '<input type="date" data-action="bulk-row-date" data-index="' + i + '" value="' + escapeHtml(row.date) + '">' +
+        '</div>';
+        html += '<div class="checkbox-row">' +
+          '<input type="checkbox" id="bulk-include-' + i + '" data-action="bulk-row-toggle" data-index="' + i + '"' + (row.include ? " checked" : "") + '>' +
+          '<label for="bulk-include-' + i + '">Include this entry when saving</label>' +
+        '</div>';
+        if(!row.destId){
+          html += '<div class="review-warn">⚠️ No confident match — please choose a destination.</div>';
+        }
+        if(!row.dateValid){
+          html += '<div class="review-warn">⚠️ Date missing or invalid — please pick a date.</div>';
+        }
+        if(row.destId && row.dateValid){
+          html += '<div class="review-ok">✓ Ready to import</div>';
+        }
+        html += '</div>';
+      });
+
+      html += '<div class="btn-row" style="margin-top:0.5rem;">' +
+        '<button class="btn btn-secondary" data-action="bulk-back">← Back to edit</button>' +
+        '<button class="btn btn-primary" data-action="bulk-confirm" style="flex:1;">✓ Confirm &amp; Save</button>' +
+      '</div>';
+    }
+    return html;
+  }
+
+  function renderTracker(){
+    var html = topbar("🧭 Destination Tracker", "Search, log &amp; review usage", "goto-home");
+    html += trackerSubnav();
+    if(state.trackerView === "search") html += renderTrackerSearch();
+    else if(state.trackerView === "longest") html += renderTrackerLongest();
+    else if(state.trackerView === "bulk") html += renderTrackerBulk();
+    return html;
+  }
+
+  function getScreenHtml(){
+    switch(state.screen){
+      case "home": return renderHome();
+      case "library-countries": return renderLibraryCountries();
+      case "library-country": return renderLibraryCountry();
+      case "tracker": return renderTracker();
+      default: return renderHome();
+    }
+  }
+
+  function render(){
+    var active = document.activeElement;
+    var focusInfo = null;
+    if(active && active.id && app.contains(active)){
+      focusInfo = { id: active.id, start: active.selectionStart, end: active.selectionEnd };
+    }
+    app.innerHTML = getScreenHtml();
+    if(focusInfo){
+      var el = document.getElementById(focusInfo.id);
+      if(el){
+        el.focus();
+        if(typeof focusInfo.start === "number" && el.setSelectionRange){
+          try{ el.setSelectionRange(focusInfo.start, focusInfo.end); }catch(e){}
+        }
+      }
+    }
+  }
+
+  /* =========================================================
+     8. EVENT HANDLING (delegated, attached once)
+     ========================================================= */
+  app.addEventListener("click", function(e){
+    var target = e.target.closest("[data-action]");
+    if(!target) return;
+    var action = target.getAttribute("data-action");
+
+    switch(action){
+      case "goto-home":
+        setState({ screen: "home", selectedDestId: null, searchQuery: "", historyExpanded: false, showCustomDatePicker: false, editingEntryId: null });
+        break;
+      case "goto-library":
+        setState({ screen: "library-countries" });
+        break;
+      case "goto-tracker":
+        setState({ screen: "tracker", trackerView: "search" });
+        break;
+      case "open-country":
+        setState({ screen: "library-country", libraryCountry: target.getAttribute("data-country"), libraryTab: "tier1" });
+        break;
+      case "back-to-countries":
+        setState({ screen: "library-countries", libraryCountry: null });
+        break;
+      case "set-tab":
+        setState({ libraryTab: target.getAttribute("data-tab") });
+        break;
+      case "tracker-tab":
+        setState({
+          trackerView: target.getAttribute("data-view"),
+          selectedDestId: null,
+          historyExpanded: false,
+          showCustomDatePicker: false,
+          editingEntryId: null
+        });
+        break;
+      case "select-dest":
+        setState({
+          selectedDestId: target.getAttribute("data-id"),
+          historyExpanded: false,
+          showCustomDatePicker: false,
+          editingEntryId: null,
+          trackerView: "search"
+        });
+        break;
+      case "clear-selection":
+        setState({ selectedDestId: null, searchQuery: "", historyExpanded: false, showCustomDatePicker: false, editingEntryId: null });
+        break;
+      case "log-today": {
+        var id1 = target.getAttribute("data-id");
+        addLogEntry(id1, todayStr());
+        render();
+        break;
+      }
+      case "toggle-custom-date":
+        setState({ showCustomDatePicker: !state.showCustomDatePicker });
+        break;
+      case "log-custom": {
+        var id2 = target.getAttribute("data-id");
+        var input = document.getElementById("custom-date-input");
+        var val = input ? input.value : "";
+        if(val){
+          addLogEntry(id2, val);
+          setState({ showCustomDatePicker: false });
+        }
+        break;
+      }
+      case "toggle-history":
+        setState({ historyExpanded: !state.historyExpanded });
+        break;
+      case "edit-entry":
+        setState({ editingEntryId: target.getAttribute("data-entry-id") });
+        break;
+      case "cancel-edit-entry":
+        setState({ editingEntryId: null });
+        break;
+      case "save-edit-entry": {
+        var entryId = target.getAttribute("data-entry-id");
+        var dateInput = document.getElementById("edit-date-input-" + entryId);
+        var newDate = dateInput ? dateInput.value : "";
+        if(newDate){
+          updateLogEntry(entryId, newDate);
+        }
+        setState({ editingEntryId: null });
+        break;
+      }
+      case "delete-entry": {
+        var delId = target.getAttribute("data-entry-id");
+        if(window.confirm("Remove this logged date?")){
+          deleteLogEntry(delId);
+          render();
+        }
+        break;
+      }
+      case "dismiss-banner":
+        setState({ bulkSuccessMessage: "" });
+        break;
+      case "bulk-parse": {
+        var textarea = document.getElementById("bulk-textarea");
+        var raw = textarea ? textarea.value : "";
+        var parsed = parseBulkText(raw);
+        setState({ bulkRaw: raw, bulkReviewRows: parsed });
+        break;
+      }
+      case "bulk-back":
+        setState({ bulkReviewRows: null });
+        break;
+      case "bulk-confirm": {
+        var count = 0;
+        state.bulkReviewRows.forEach(function(row){
+          if(row.include && row.destId && row.dateValid && row.date){
+            addLogEntry(row.destId, row.date);
+            count++;
+          }
+        });
+        setState({
+          bulkReviewRows: null,
+          bulkRaw: "",
+          trackerView: "search",
+          bulkSuccessMessage: "Imported " + count + " log entr" + (count === 1 ? "y" : "ies") + "."
+        });
+        break;
+      }
+      default:
+        break;
+    }
+  });
+
+  app.addEventListener("input", function(e){
+    if(e.target.id === "search-input"){
+      setState({ searchQuery: e.target.value, selectedDestId: null });
+    }
+  });
+
+  app.addEventListener("change", function(e){
+    var action = e.target.getAttribute && e.target.getAttribute("data-action");
+    if(!action) return;
+    var idx = parseInt(e.target.getAttribute("data-index"), 10);
+    if(action === "bulk-row-select"){
+      state.bulkReviewRows[idx].destId = e.target.value;
+      render();
+    } else if(action === "bulk-row-date"){
+      var v = e.target.value;
+      state.bulkReviewRows[idx].date = v;
+      state.bulkReviewRows[idx].dateValid = /^\d{4}-\d{2}-\d{2}$/.test(v);
+      render();
+    } else if(action === "bulk-row-toggle"){
+      state.bulkReviewRows[idx].include = e.target.checked;
+      render();
+    }
+  });
+
+  /* =========================================================
+     9. BULK IMPORT PARSING
+     ========================================================= */
+  function parseBulkText(raw){
+    return raw.split("\n").map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; }).map(function(line){
+      var commaIdx = line.lastIndexOf(",");
+      var namePart = line, datePart = "";
+      if(commaIdx !== -1){
+        namePart = line.slice(0, commaIdx).trim();
+        datePart = line.slice(commaIdx + 1).trim();
+      }
+      var dateValid = /^\d{4}-\d{2}-\d{2}$/.test(datePart);
+      var match = namePart ? bestMatchForName(namePart) : null;
+      return {
+        raw: line,
+        name: namePart,
+        date: dateValid ? datePart : "",
+        dateValid: dateValid,
+        destId: match ? match.id : "",
+        include: true
+      };
+    });
+  }
+
+  /* =========================================================
+     10. INIT
+     ========================================================= */
+  render();
+
+  if("serviceWorker" in navigator){
+    window.addEventListener("load", function(){
+      navigator.serviceWorker.register("./sw.js").catch(function(){});
+    });
+  }
+})();
+</script>
+</body>
+</html>
