@@ -1,6 +1,6 @@
 {
-  "name": "Storybook Scenes — Location Library & Destination Tracker",
-  "short_name": "Storybook Scenes",
+  "name": "Fairytale Destinations — Location Bank & Destination Tracker",
+  "short_name": "Destinations",
   "description": "A cozy offline companion for planning AI-generated storybook village scenes: browse the location library and track when each destination was last used.",
   "start_url": "./",
   "scope": "./",
