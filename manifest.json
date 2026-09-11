@@ -1,37 +1,22 @@
 {
-  "name": "Fairytale Destinations — Location Bank & Destination Tracker",
+  "name": "Storybook Destinations",
   "short_name": "Destinations",
-  "description": "A cozy offline companion for planning AI-generated storybook village scenes: browse the location library and track when each destination was last used.",
+  "description": "Manage AI storybook-style scenes from European villages and select US towns",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#f6ecd9",
-  "theme_color": "#8a4b1f",
+  "background_color": "#f4ecd8",
+  "theme_color": "#d48c28",
   "icons": [
     {
       "src": "./icon-192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
+      "type": "image/png"
     },
     {
       "src": "./icon-512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "./icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "./icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "type": "image/png"
     }
   ]
 }
