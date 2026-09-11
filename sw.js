@@ -1,6 +1,6 @@
 // Service worker for the Storybook Scenes PWA.
 // Bump CACHE_NAME any time app files change to force clients to fetch fresh copies.
-const CACHE_NAME = "storybook-scenes-cache-v1";
+const CACHE_NAME = "storybook-scenes-cache-v2";
 
 const CORE_ASSETS = [
   "./",
